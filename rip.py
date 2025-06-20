@@ -5,15 +5,15 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from fake_useragent import UserAgent
+from faker import Faker
 import time
 
-NAME = "Oliver Melin"
-PHONE = "51782325"
+fake = Faker('da_DK')
+
 EMAILS = [
-	"example1@gmail.com",
-	"ohmelin23@gmail.com",
-	"example23@gmail.com",
-	"example3@gmail.com",
+	"1@touchgrass.store",
+	"2@touchgrass.store",
+	"3@touchgrass.store",
 ]
 
 def setup_driver():
@@ -37,7 +37,8 @@ def start_flow(driver, wait: WebDriverWait):
 def fill_form(driver, wait: WebDriverWait, email):
 	input_name = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#register-form > input:nth-child(2)")))
 	input_name.clear()
-	input_name.send_keys(NAME)
+	
+	input_name.send_keys(fake.first_name())
 
 	input_email = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#register-form > input.form-input.js-mailcheck")))
 	input_email.clear()
@@ -45,7 +46,10 @@ def fill_form(driver, wait: WebDriverWait, email):
 
 	input_phone = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#register-form > div.phone-number-field > input")))
 	input_phone.clear()
-	input_phone.send_keys(PHONE)
+	phone_number = fake.phone_number()
+	if phone_number.startswith('+45'):
+		phone_number = phone_number.replace('+45', '').strip()
+	input_phone.send_keys(phone_number)
 
 	checkbox = driver.find_element(By.ID, "cb_gdpr")
 	driver.execute_script("arguments[0].checked = true;", checkbox)
