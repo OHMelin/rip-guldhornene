@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from fake_useragent import UserAgent
 from faker import Faker
 import time
+import random
 
 fake = Faker('da_DK')
 
@@ -38,7 +39,7 @@ def fill_form(driver, wait: WebDriverWait, email):
 	input_name = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#register-form > input:nth-child(2)")))
 	input_name.clear()
 	
-	input_name.send_keys(fake.first_name())
+	input_name.send_keys(generate_random_name())
 
 	input_email = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#register-form > input.form-input.js-mailcheck")))
 	input_email.clear()
@@ -46,10 +47,7 @@ def fill_form(driver, wait: WebDriverWait, email):
 
 	input_phone = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#register-form > div.phone-number-field > input")))
 	input_phone.clear()
-	phone_number = fake.phone_number()
-	if phone_number.startswith('+45'):
-		phone_number = phone_number.replace('+45', '').strip()
-	input_phone.send_keys(phone_number)
+	input_phone.send_keys(generate_random_phone_number())
 
 	checkbox = driver.find_element(By.ID, "cb_gdpr")
 	driver.execute_script("arguments[0].checked = true;", checkbox)
@@ -83,6 +81,16 @@ def spin(driver, wait: WebDriverWait, email):
 			prize = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "prize-name")))
 			print(f"\n🤑 You won: {prize.text}\nWith email: {email}\n")
 
+def generate_random_name():
+	return fake.first_name()
+
+def generate_random_phone_number():
+	valid_phone_number_prefixes = ['2', '30', '31', '40', '41', '42', '50', '51', '52', '53', '60', '61', '71', '81', '91', '92', '93']
+	prefix = random.choice(valid_phone_number_prefixes)
+	remaining_length = 8 - len(prefix)
+	number = prefix + ''.join(random.choices('0123456789', k=remaining_length))
+	return number
+
 def main():
 	for email in EMAILS:
 		driver = setup_driver()
@@ -94,8 +102,7 @@ def main():
 			if check_already_submitted(driver, wait):
 				print(f"❌ Email {email} has already spinned this week!")
 				continue
-			else:
-				spin(driver, wait, email)
+			spin(driver, wait, email)
 		except Exception as e:
 			print("Error:", e)
 			continue
